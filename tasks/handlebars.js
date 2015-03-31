@@ -63,7 +63,8 @@ module.exports = function(grunt) {
       amd: false,
       commonjs: false,
       knownHelpers: [],
-      knownHelpersOnly: false
+      knownHelpersOnly: false,
+      helpers: []
     });
 
     // assign regex for partials directory detection
@@ -71,6 +72,8 @@ module.exports = function(grunt) {
 
     // assign regex for partial detection
     var isPartialRegex = options.partialRegex || /^_/;
+
+    var helpers = options.helpers;
 
     // assign transformation functions
     var processContent = options.processContent || defaultProcessContent;
@@ -86,6 +89,7 @@ module.exports = function(grunt) {
     this.files.forEach(function(f) {
       var declarations = [];
       var partials = [];
+      var helpersOutput = [];
       var templates = [];
 
       // Namespace info for current template
@@ -168,7 +172,14 @@ module.exports = function(grunt) {
         }
       });
 
-      var output = declarations.concat(partials, templates);
+      // include helpers
+      for (var name in helpers) {
+        if (helpers.hasOwnProperty(name)) {
+          helpersOutput.push('Handlebars.registerHelper(\'' + name + '\', ' + helpers[name].toString() + ');');
+        }
+      }
+
+      var output = declarations.concat(partials, helpersOutput, templates);
       if (output.length < 1) {
         grunt.log.warn('Destination not written because compiled files were empty.');
       } else {
